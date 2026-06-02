@@ -39,5 +39,4 @@ namespace paralloc{
             idx += size;
         }
     }
-
 }
