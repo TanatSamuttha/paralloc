@@ -5,13 +5,19 @@ namespace paralloc{
 
     void* buffer;
 
-    uint8_t map[4096];
+    uint16_t map[4096];
     
-    uint8_t begin[4];
-    uint8_t end[4];
+    /*
+        size 2 bytes is located at index 0
+        size 4 bytes is located a index 1
+        size 8 bytes is located a index 2
+        size 16 bytes is located a index 3
+    */
+    uint16_t begin[4];
+    uint16_t end[4];
 
     inline void init(){
-        buffer = malloc(4096);
+        buffer = std::malloc(4096);
 
         begin[0] = 0;
         end[0] = 2047;
@@ -32,8 +38,9 @@ namespace paralloc{
     }
 
     inline void connect(uint8_t size){
-        int idx = begin[size];
-        int endIdx = end[size];
+        int sizeIdx = __builtin_ctz(size) - 1;
+        int idx = begin[sizeIdx];
+        int endIdx = end[sizeIdx];
         while(idx < endIdx){
             map[idx] = idx + size;
             idx += size;
