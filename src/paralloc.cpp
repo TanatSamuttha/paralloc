@@ -5,25 +5,25 @@ namespace paralloc{
 
     void* buffer;
 
-    int16_t map[4096];
+    uint8_t map[4096];
     
-    int16_t begin[17];
-    int16_t end[17];
+    uint8_t begin[4];
+    uint8_t end[4];
 
     inline void init(){
         buffer = malloc(4096);
 
-        begin[2] = 0;
-        end[2] = 2047;
+        begin[0] = 0;
+        end[0] = 2047;
         
-        begin[4] = 2048;
-        end[4] = 3071;
+        begin[1] = 2048;
+        end[1] = 3071;
 
-        begin[8] = 3072;
-        end[8] = 3583;
+        begin[2] = 3072;
+        end[2] = 3583;
 
-        begin[16] = 3584;
-        end[16] = 4095;
+        begin[3] = 3584;
+        end[3] = 4095;
 
         connect(2);
         connect(4);
@@ -31,12 +31,16 @@ namespace paralloc{
         connect(16);
     }
 
-    inline void connect(int8_t size){
+    inline void connect(uint8_t size){
         int idx = begin[size];
         int endIdx = end[size];
         while(idx < endIdx){
             map[idx] = idx + size;
             idx += size;
         }
+    }
+
+    inline void* malloc(size_t size){
+        int idx = __builtin_ctz(size) - 1;
     }
 }
