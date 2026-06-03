@@ -23,19 +23,17 @@ namespace paralloc{
 
     extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
 
-    inline void connect(uint8_t size, uint16_t chunkSize);
+    inline constexpr int sizeClass(size_t size){
+        if(size > 64) return -1;
 
-    inline void init(){
-        buffer = static_cast<uint8_t*>(std::malloc(4096));
-
-        connect(8, 2048);
-        connect(16, 1024);
-        connect(32, 512);
-        connect(64, 512);
+        if(size <= 8) return 0;
+        if(size <= 16) return 1;
+        if(size <= 32) return 2;
+        if(size <= 64) return 3;
     }
 
     inline void connect(uint8_t size, uint16_t chunkSize){
-        int sizeIdx = __builtin_ctz(size) - 3;
+        int sizeIdx = sizeClass(size);
 
         uint16_t headPad = head[sizeIdx];
         uint8_t* headPtr = buffer + headPad;
@@ -49,8 +47,17 @@ namespace paralloc{
         *reinterpret_cast<uint8_t**>(ptr) = nullptr;
     }
 
+    inline void init(){
+        buffer = static_cast<uint8_t*>(std::malloc(4096));
+
+        connect(8, 2048);
+        connect(16, 1024);
+        connect(32, 512);
+        connect(64, 512);
+    }
+
     inline uint16_t combine(uint8_t size){
-        int sizeIdx = __builtin_ctz(size) - 3;
+        int sizeIdx = sizeClass(size);
         uint8_t size2 = size + size;
         if(virgin[sizeIdx] <= tail[sizeIdx] - size2 + 1){
             tail[sizeIdx] -= size2;
@@ -73,7 +80,7 @@ namespace paralloc{
     template<typename T>
     inline T* paralloc(){
         constexpr int size = sizeof(T);
-        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+        constexpr int sizeIdx = sizeClass(size);
 
         if(head[sizeIdx] == INVALID){
             int16_t combineIdx = combine(sizeof(T) >> 1);
@@ -114,7 +121,7 @@ namespace paralloc{
             return;
         }
 
-        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+        constexpr int sizeIdx = sizeClass(size);
 
         uint8_t* headPtr = (head[sizeIdx] != INVALID)? buffer + head[sizeIdx] : nullptr;
 
