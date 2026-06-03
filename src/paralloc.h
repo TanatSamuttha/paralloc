@@ -46,20 +46,20 @@ namespace paralloc{
         *reinterpret_cast<uint8_t**>(ptr) = nullptr;
     }
     
-    // template<typename T>
-    // inline T* paralloc(){
-    //     constexpr int size = sizeof(T);
-    //     constexpr int sizeIdx = __builtin_ctz(size) - 3;
+    template<typename T>
+    inline T* paralloc(){
+        constexpr int size = sizeof(T);
+        constexpr int sizeIdx = __builtin_ctz(size) - 3;
 
-    //     if(size > bytesleft[sizeIdx]){
-    //         return static_cast<T*>(std::malloc(size));
-    //     }
+        if(size > bytesleft[sizeIdx]){
+            return static_cast<T*>(std::malloc(size));
+        }
 
-    //     void* ptr = static_cast<uint8_t*>(buffer) + head[sizeIdx];
-    //     head[sizeIdx] = *ptr;
-    //     bytesleft[sizeIdx] -= size;
-    //     return static_cast<T*>(ptr);
-    // }
+        void* ptr = buffer + head[sizeIdx];
+        head[sizeIdx] = *reinterpret_cast<uint8_t**>(ptr) - buffer;
+        bytesleft[sizeIdx] -= size;
+        return static_cast<T*>(ptr);
+    }
 
     // template<typename T>
     // inline T* malloc(){

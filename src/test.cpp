@@ -4,17 +4,17 @@
 int main(){
     paralloc::init();
 
-    // long long int* ptr = paralloc::paralloc<long long int>();
+    long long int* ptr = paralloc::paralloc<long long int>();
 
-    // std::cout << "Test assign value to memmory\n";
+    std::cout << "Test assign value to memmory\n";
     
-    // std::cout << ptr << " = " << *ptr << '\n';
+    std::cout << ptr << " = " << *ptr << '\n';
 
-    // *ptr = 5;
-    // std::cout << ptr << " = "  << *ptr << '\n';
+    *ptr = 5;
+    std::cout << ptr << " = "  << *ptr << '\n';
 
-    // *ptr = 24;
-    // std::cout << ptr << " = "  << *ptr << '\n';
+    *ptr = 24;
+    std::cout << ptr << " = "  << *ptr << '\n';
 
     // std::cout << "Test free memmory\n";
 
