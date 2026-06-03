@@ -61,14 +61,14 @@ namespace paralloc{
         return static_cast<T*>(ptr);
     }
 
-    // template<typename T>
-    // inline T* malloc(){
-    //     constexpr int size = sizeof(T);
-    //     if (size == 2 || size == 4 || size == 8 || size == 16){
-    //         return paralloc<T>();
-    //     }
-    //     return static_cast<T*>(std::malloc(size));
-    // }
+    template<typename T>
+    inline T* malloc(){
+        constexpr int size = sizeof(T);
+        if (size == 8 || size == 16 || size == 32 || size == 64){
+            return paralloc<T>();
+        }
+        return static_cast<T*>(std::malloc(size));
+    }
 
     // template<typename T>
     // inline void free(T* ptr){

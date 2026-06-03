@@ -16,6 +16,15 @@ int main(){
     *ptr = 24;
     std::cout << ptr << " = "  << *ptr << '\n';
 
+    std::cout << "Test unsupported size\n";
+
+    uint32_t* ptr2 = paralloc::malloc<uint32_t>();
+
+    std::cout << ptr2 << " = " << *ptr2 << '\n';
+
+    *ptr2 = 64;
+    std::cout << ptr2 << " = " << *ptr2 << '\n';
+
     // std::cout << "Test free memmory\n";
 
     // paralloc::free<long long int>(ptr);
