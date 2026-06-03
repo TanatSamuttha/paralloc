@@ -3,74 +3,97 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <iostream>
 
 namespace paralloc{
 
-    extern void* buffer;
-
-    extern uint16_t map[4096];
+    extern uint8_t* buffer;
 
     /*
-        size 2 bytes is located at index 0
-        size 4 bytes is located a index 1
-        size 8 bytes is located a index 2
-        size 16 bytes is located a index 3
+        size 8 bytes is located at index 0
+        size 16 bytes is located a index 1
+        size 32 bytes is located a index 2
+        size 64 bytes is located a index 3
 
         hashed by count trail zero and decrease by 1
     */
-    extern uint16_t begin[4];
-    extern uint16_t end[4];
+    extern uint16_t head[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
 
-    inline void connect(uint8_t size);
+    extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
+
+    inline void connect(uint8_t size, uint16_t chunkSize);
 
     inline void init(){
-        buffer = std::malloc(4096);
+        buffer = static_cast<uint8_t*>(std::malloc(4096));
 
-        begin[0] = 0;
-        end[0] = 2047;
-        
-        begin[1] = 2048;
-        end[1] = 3071;
-
-        begin[2] = 3072;
-        end[2] = 3583;
-
-        begin[3] = 3584;
-        end[3] = 4095;
-
-        connect(2);
-        connect(4);
-        connect(8);
-        connect(16);
+        connect(8, 2048);
+        connect(16, 1024);
+        connect(32, 512);
+        connect(64, 512);
     }
 
-    inline void connect(uint8_t size){
-        int sizeIdx = __builtin_ctz(size) - 1;
-        int idx = begin[sizeIdx];
-        int endIdx = end[sizeIdx];
-        while(idx < endIdx){
-            map[idx] = idx + size;
-            idx += size;
+    inline void connect(uint8_t size, uint16_t chunkSize){
+        int sizeIdx = __builtin_ctz(size) - 3;
+
+        uint16_t headPad = head[sizeIdx];
+        uint8_t* headPtr = buffer + headPad;
+        uint8_t* ptr = buffer + headPad;
+
+        while(ptr + size < headPtr + chunkSize){
+            *reinterpret_cast<uint8_t**>(ptr) = ptr + size;
+            ptr += size;
         }
+
+        *reinterpret_cast<uint8_t**>(ptr) = nullptr;
     }
     
     template<typename T>
     inline T* paralloc(){
-        int size = sizeof(T);
-        int sizeIdx = __builtin_ctz(size) - 1;
-        void* ptr = static_cast<uint8_t*>(buffer) + begin[sizeIdx];
-        begin[sizeIdx] = map[begin[sizeIdx]];
+        constexpr int size = sizeof(T);
+        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+
+        if(head[sizeIdx] == INVALID){
+            return static_cast<T*>(std::malloc(size));
+        }
+
+        void* ptr = buffer + head[sizeIdx];
+
+        uint8_t* next = *reinterpret_cast<uint8_t**>(ptr);
+        head[sizeIdx] = (next == nullptr)? INVALID : next - buffer;
+
         return static_cast<T*>(ptr);
     }
 
     template<typename T>
     inline T* malloc(){
-        int size = sizeof(T);
-        int idx = __builtin_ctz(size) - 1;
-        if(idx > 3){
-            return static_cast<T*>(std::malloc(size));
+        constexpr int size = sizeof(T);
+        if(size == 8 || size == 16 || size == 32 || size == 64){
+            return paralloc<T>();
         }
-        return paralloc<T>();
+        return static_cast<T*>(std::malloc(size));
+    }
+
+    template<typename T>
+    inline void free(T* ptr){
+        constexpr int size = sizeof(T);
+        if (size != 8 && size != 16 && size != 32 && size != 64){
+            std::free(ptr);
+            return;
+        }        
+        
+        uint8_t* ptrByte = reinterpret_cast<uint8_t*>(ptr);
+
+        if(ptrByte < buffer || ptrByte >= buffer + 4096){
+            std::free(ptr);
+            return;
+        }
+
+        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+
+        uint8_t* headPtr = (head[sizeIdx] != INVALID)? buffer + head[sizeIdx] : nullptr;
+
+        *reinterpret_cast<uint8_t**>(ptrByte) = headPtr;
+        head[sizeIdx] = ptrByte - buffer;
     }
 }
 
