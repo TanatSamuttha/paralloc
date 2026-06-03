@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <iostream>
 
 namespace paralloc{
 
@@ -26,14 +27,14 @@ namespace paralloc{
     inline void init(){
         buffer = std::malloc(4096);
 
-        connect(2);
-        connect(4);
         connect(8);
         connect(16);
+        connect(32);
+        connect(64);
     }
 
     inline void connect(uint8_t size){
-        int sizeIdx = __builtin_ctz(size) - 1;
+        int sizeIdx = __builtin_ctz(size) - 3;
         int beginIdx = begin[sizeIdx];
         int idx = beginIdx;
         int chunkSize = bytesleft[sizeIdx];
@@ -46,7 +47,7 @@ namespace paralloc{
     template<typename T>
     inline T* paralloc(){
         constexpr int size = sizeof(T);
-        constexpr int sizeIdx = __builtin_ctz(size) - 1;
+        constexpr int sizeIdx = __builtin_ctz(size) - 3;
         if(size > bytesleft[sizeIdx]){
             return static_cast<T*>(std::malloc(size));
         }
@@ -81,7 +82,7 @@ namespace paralloc{
             return;
         }
 
-        constexpr int sizeIdx = __builtin_ctz(size) - 1;
+        constexpr int sizeIdx = __builtin_ctz(size) - 3;
         int beginIdx = begin[sizeIdx];
         int ptrIdx = ptrByte - bufferByte;
 

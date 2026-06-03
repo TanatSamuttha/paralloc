@@ -4,7 +4,7 @@
 int main(){
     paralloc::init();
 
-    int* ptr = paralloc::paralloc<int>();
+    long long int* ptr = paralloc::paralloc<long long int>();
 
     std::cout << "Test assign value to memmory\n";
     
@@ -18,10 +18,10 @@ int main(){
 
     std::cout << "Test free memmory\n";
 
-    paralloc::free<int>(ptr);
+    paralloc::free<long long int>(ptr);
     std::cout << ptr << " = "  << *ptr << '\n';
 
-    int* ptr2 = paralloc::paralloc<int>();
+    long long int* ptr2 = paralloc::paralloc<long long int>();
     std::cout << ptr << " = " << *ptr << '\n';
 
     return 0;
