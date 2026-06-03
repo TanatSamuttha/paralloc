@@ -24,12 +24,12 @@ namespace paralloc{
     extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
 
     inline constexpr int sizeClass(size_t size){
-        if(size > 64) return -1;
-
         if(size <= 8) return 0;
         if(size <= 16) return 1;
         if(size <= 32) return 2;
         if(size <= 64) return 3;
+
+        return -1;
     }
 
     inline void connect(uint8_t size, uint16_t chunkSize){
