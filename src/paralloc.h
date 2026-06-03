@@ -21,7 +21,7 @@ namespace paralloc{
 
     extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
 
-    inline void connect(uint8_t size);
+    inline void connect(uint8_t size, uint16_t chunkSize);
 
     inline void init(){
         buffer = static_cast<uint8_t*>(std::malloc(4096));
@@ -59,8 +59,7 @@ namespace paralloc{
         void* ptr = buffer + head[sizeIdx];
 
         uint8_t* next = *reinterpret_cast<uint8_t**>(ptr);
-        if(next == nullptr) head[sizeIdx] = INVALID;
-        else head[sizeIdx] = next - buffer;
+        head[sizeIdx] = (next == nullptr)? INVALID : next - buffer;
 
         return static_cast<T*>(ptr);
     }
@@ -68,7 +67,7 @@ namespace paralloc{
     template<typename T>
     inline T* malloc(){
         constexpr int size = sizeof(T);
-        if (size == 8 || size == 16 || size == 32 || size == 64){
+        if(size == 8 || size == 16 || size == 32 || size == 64){
             return paralloc<T>();
         }
         return static_cast<T*>(std::malloc(size));
