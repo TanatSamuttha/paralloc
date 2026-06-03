@@ -18,6 +18,7 @@ namespace paralloc{
         hashed by count trail zero and decrease by 1
     */
     extern uint16_t head[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
+    extern uint16_t virgin[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
 
     extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
 
@@ -57,6 +58,7 @@ namespace paralloc{
         }
 
         void* ptr = buffer + head[sizeIdx];
+        if(head[sizeIdx] == virgin[sizeIdx]) virgin[sizeIdx] += size;
 
         uint8_t* next = *reinterpret_cast<uint8_t**>(ptr);
         head[sizeIdx] = (next == nullptr)? INVALID : next - buffer;
@@ -94,6 +96,7 @@ namespace paralloc{
 
         *reinterpret_cast<uint8_t**>(ptrByte) = headPtr;
         head[sizeIdx] = ptrByte - buffer;
+        if(head[sizeIdx] == virgin[sizeIdx] - size) virgin[sizeIdx] -= size;
     }
 }
 

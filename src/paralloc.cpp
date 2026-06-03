@@ -14,6 +14,7 @@ namespace paralloc{
         hashed by count trail zero and decrease by 1
     */
     uint16_t head[4] = {0, 2048, 3072, 3584};
+    uint16_t virgin[4] = {0, 2048, 3072, 3584};
 
     const uint16_t INVALID = 0xFFFF;
 }
