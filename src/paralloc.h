@@ -18,28 +18,26 @@ namespace paralloc{
         hashed by count trail zero and decrease by 1
     */
     extern uint16_t head[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
-    extern uint16_t bytesleft[4]; // Value assigned in .cpp file {2048, 1024, 512, 512}
 
-    extern uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
+    extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
 
     inline void connect(uint8_t size);
 
     inline void init(){
         buffer = static_cast<uint8_t*>(std::malloc(4096));
 
-        connect(8);
-        connect(16);
-        connect(32);
-        connect(64);
+        connect(8, 2048);
+        connect(16, 1024);
+        connect(32, 512);
+        connect(64, 512);
     }
 
-    inline void connect(uint8_t size){
+    inline void connect(uint8_t size, uint16_t chunkSize){
         int sizeIdx = __builtin_ctz(size) - 3;
 
         uint16_t headPad = head[sizeIdx];
         uint8_t* headPtr = buffer + headPad;
         uint8_t* ptr = buffer + headPad;
-        uint16_t chunkSize = bytesleft[sizeIdx];
 
         while(ptr + size < headPtr + chunkSize){
             *reinterpret_cast<uint8_t**>(ptr) = ptr + size;
@@ -54,7 +52,7 @@ namespace paralloc{
         constexpr int size = sizeof(T);
         constexpr int sizeIdx = __builtin_ctz(size) - 3;
 
-        if(size > bytesleft[sizeIdx]){
+        if(head[sizeIdx] == INVALID){
             return static_cast<T*>(std::malloc(size));
         }
 
@@ -64,7 +62,6 @@ namespace paralloc{
         if(next == nullptr) head[sizeIdx] = INVALID;
         else head[sizeIdx] = next - buffer;
 
-        bytesleft[sizeIdx] -= size;
         return static_cast<T*>(ptr);
     }
 
@@ -98,8 +95,6 @@ namespace paralloc{
 
         *reinterpret_cast<uint8_t**>(ptrByte) = headPtr;
         head[sizeIdx] = ptrByte - buffer;
-
-        bytesleft[sizeIdx] += size;
     }
 }
 
