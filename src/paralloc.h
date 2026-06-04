@@ -14,13 +14,15 @@ private:
         size 32 bytes is located a index 2
         size 64 bytes is located a index 3
 
-        hashed by count trail zero and decrease by 1
+        hashed by count trail zero and decrease by 3
     */
-    uint16_t head[4] = {0, 2048, 3072, 3584}; // Value assigned in .cpp file {0, 2048, 3072, 3584}
-    uint16_t virgin[4] = {0, 2048, 3072, 3584}; // Value assigned in .cpp file {0, 2048, 3072, 3584}
-    uint16_t tail[4] = {2047, 3071, 3583, 4095}; // Value assigned in .cpp file {2047, 3071, 3583, 4095}
+    uint16_t head[4] = {0, 2048, 3072, 3584};
+    uint16_t virgin[4] = {0, 2048, 3072, 3584};
+    uint16_t tail[4] = {2047, 3071, 3583, 4095};
 
-    const uint16_t INVALID = 0xFFFF; // Value assigned in .cpp file 0xFFFF
+    const uint16_t INVALID = 0xFFFF;
+
+    bool firstTime = true;
 
 private:
     inline int findSize(size_t size){
@@ -69,20 +71,21 @@ private:
     }
 
 public:
-    Paralloc(){
-        buffer = (uint8_t*)std::malloc(4096);
-        connect(8, 2048);
-        connect(16, 1024);
-        connect(32, 512);
-        connect(64, 512);
-    }
-
     ~Paralloc(){
         std::free(buffer);
     }
 
     template<typename T>
     inline T* alloc(){
+        if(firstTime){
+            buffer = (uint8_t*)std::malloc(4096);
+            connect(8, 2048);
+            connect(16, 1024);
+            connect(32, 512);
+            connect(64, 512);
+            firstTime = false;
+        }
+
         int size = findSize(sizeof(T));
         int sizeIdx = __builtin_ctz(size) - 3;
 
