@@ -1,13 +1,12 @@
 #ifndef PARALLOC_H
 #define PARALLOC_H
 
-#include <cstdlib>
 #include <cstdint>
-#include <iostream>
+#include <cstdlib>
 
-namespace paralloc{
-
-    extern uint8_t* buffer;
+class Paralloc{
+private:
+    uint8_t* buffer;
 
     /*
         size 8 bytes is located at index 0
@@ -15,49 +14,43 @@ namespace paralloc{
         size 32 bytes is located a index 2
         size 64 bytes is located a index 3
 
-        hashed by count trail zero and decrease by 1
+        hashed by count trail zero and decrease by 3
     */
-    extern uint16_t head[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
-    extern uint16_t virgin[4]; // Value assigned in .cpp file {0, 2048, 3072, 3584}
-    extern uint16_t tail[4]; // Value assigned in .cpp file {2047, 3071, 3583, 4095}
+    uint16_t head[4] = {0, 2048, 3072, 3584};
+    uint16_t virgin[4] = {0, 2048, 3072, 3584};
+    uint16_t tail[4] = {2047, 3071, 3583, 4095};
 
-    extern const uint16_t INVALID; // Value assigned in .cpp file 0xFFFF
+    const uint16_t INVALID = 0xFFFF;
 
-    inline constexpr int findSize(size_t size){
+    bool firstTime = true;
+
+private:
+    inline int findSize(size_t size){
         if(size <= 8) return 8;
         if(size <= 16) return 16;
         if(size <= 32) return 32;
         if(size <= 64) return 64;
 
-        return -1;
+        return INVALID;
     }
 
     inline void connect(uint8_t size, uint16_t chunkSize){
-        int sizeIdx = __builtin_ctz(size) - 3;
+        int sizeIdx = ctz(size) - 3;
         
         uint16_t headPad = head[sizeIdx];
         uint8_t* headPtr = buffer + headPad;
         uint8_t* ptr = buffer + headPad;
         
         while(ptr + size < headPtr + chunkSize){
-            *reinterpret_cast<uint8_t**>(ptr) = ptr + size;
+            *(uint8_t**)ptr = ptr + size;
             ptr += size;
         }
         
-        *reinterpret_cast<uint8_t**>(ptr) = nullptr;
-    }
-
-    inline void init(){
-        buffer = static_cast<uint8_t*>(std::malloc(4096));
-
-        connect(8, 2048);
-        connect(16, 1024);
-        connect(32, 512);
-        connect(64, 512);
+        *(uint8_t**)ptr = nullptr;
     }
 
     inline uint16_t combine(uint8_t size){
-        int sizeIdx = __builtin_ctz(size) - 3;
+        int sizeIdx = ctz(size) - 3;
         uint8_t size2 = size + size;
         if(virgin[sizeIdx] <= tail[sizeIdx] - size2 + 1){
             tail[sizeIdx] -= size2;
@@ -77,10 +70,38 @@ namespace paralloc{
         }
     }
     
+    #ifdef _MSC_VER
+    #include <intrin.h>
+
+    inline int ctz(unsigned int x){
+        unsigned long idx;
+        _BitScanForward(&idx, x);
+        return (int)idx;
+    }
+    #else
+    inline int ctz(unsigned int x){
+        return __builtin_ctz(x);
+    }
+    #endif
+
+public:
+    ~Paralloc(){
+        std::free(buffer);
+    }
+
     template<typename T>
-    inline T* paralloc(){
-        constexpr int size = findSize(sizeof(T));
-        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+    inline T* alloc(){
+        if(firstTime){
+            buffer = (uint8_t*)std::malloc(4096);
+            connect(8, 2048);
+            connect(16, 1024);
+            connect(32, 512);
+            connect(64, 512);
+            firstTime = false;
+        }
+
+        int size = findSize(sizeof(T));
+        int sizeIdx = ctz(size) - 3;
 
         if(head[sizeIdx] == INVALID){
             int16_t combineIdx = combine(size >> 1);
@@ -91,44 +112,45 @@ namespace paralloc{
         void* ptr = buffer + head[sizeIdx];
         if(head[sizeIdx] == virgin[sizeIdx]) virgin[sizeIdx] += size;
 
-        uint8_t* next = *reinterpret_cast<uint8_t**>(ptr);
+        uint8_t* next = *(uint8_t**)ptr;
         head[sizeIdx] = (next == nullptr)? INVALID : next - buffer;
 
-        return static_cast<T*>(ptr);
+        return (T*)ptr;
     }
 
     template<typename T>
-    inline T* malloc(){
-        constexpr int size = findSize(sizeof(T));
-        if(size <= 64){
-            return paralloc<T>();
+    inline T* galloc(){
+        int size = findSize(sizeof(T));
+        if(sizeof(T) <= 64){
+            return alloc<T>();
         }
-        return static_cast<T*>(std::malloc(sizeof(T)));
+        return (T*)std::malloc(sizeof(T));
     }
 
     template<typename T>
     inline void free(T* ptr){
-        constexpr int size = findSize(sizeof(T));
+        int size = findSize(sizeof(T));
         if (size > 64){
             std::free(ptr);
             return;
-        }        
+        }
         
-        uint8_t* ptrByte = reinterpret_cast<uint8_t*>(ptr);
+        uint8_t* ptrByte = (uint8_t*)ptr;
 
         if(ptrByte < buffer || ptrByte >= buffer + 4096){
             std::free(ptr);
             return;
         }
 
-        constexpr int sizeIdx = __builtin_ctz(size) - 3;
+        int sizeIdx = ctz(size) - 3;
 
         uint8_t* headPtr = (head[sizeIdx] != INVALID)? buffer + head[sizeIdx] : nullptr;
 
-        *reinterpret_cast<uint8_t**>(ptrByte) = headPtr;
+        *(uint8_t**)ptrByte = headPtr;
         head[sizeIdx] = ptrByte - buffer;
         if(head[sizeIdx] == virgin[sizeIdx] - size) virgin[sizeIdx] -= size;
     }
-}
+};
+
 
 #endif
