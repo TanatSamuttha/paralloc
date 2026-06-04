@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <iostream>
 
 class Paralloc{
 private:
@@ -88,10 +87,9 @@ public:
         int sizeIdx = __builtin_ctz(size) - 3;
 
         if(head[sizeIdx] == INVALID){
-            // int16_t combineIdx = combine(size >> 1);
-            // if(combineIdx == INVALID) return static_cast<T*>(std::malloc(size));
-            // else return reinterpret_cast<T*>(buffer + combineIdx);
-            return (T*)std::malloc(sizeof(T));
+            int16_t combineIdx = combine(size >> 1);
+            if(combineIdx == INVALID) return static_cast<T*>(std::malloc(size));
+            else return reinterpret_cast<T*>(buffer + combineIdx);
         }
 
         void* ptr = buffer + head[sizeIdx];
@@ -128,7 +126,6 @@ public:
         }
 
         int sizeIdx = __builtin_ctz(size) - 3;
-        std::cout << sizeIdx << '\n';
 
         uint8_t* headPtr = (head[sizeIdx] != INVALID)? buffer + head[sizeIdx] : nullptr;
 
