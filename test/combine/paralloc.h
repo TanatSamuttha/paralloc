@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 
 class Paralloc{
 private:
@@ -55,7 +56,9 @@ private:
         if(virgin[sizeIdx] <= tail[sizeIdx] - allSize + 1){
             tail[sizeIdx] -= allSize;
 
-            uint8_t* ptr = buffer + (tail[sizeIdx] - size);
+            uint8_t* ptr = buffer + (tail[sizeIdx] - size + 1);
+            std::cout << "tail " << tail[sizeIdx] << '\n';
+            std::cout << "head " << tail[sizeIdx] - size + 1 << '\n';
             *(uint8_t**)ptr = nullptr;
 
             return tail[sizeIdx] + 1;
