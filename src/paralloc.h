@@ -49,14 +49,14 @@ private:
         *(uint8_t**)ptr = nullptr;
     }
 
-    inline uint16_t combine(uint8_t size){
+    inline uint16_t combine(uint8_t size, uint8_t blocks){
         int sizeIdx = ctz(size) - 3;
-        uint8_t size2 = size + size;
-        if(virgin[sizeIdx] <= tail[sizeIdx] - size2 + 1){
-            tail[sizeIdx] -= size2;
+        uint16_t allSize = uint16_t(size) * blocks;
+        if(virgin[sizeIdx] <= tail[sizeIdx] - allSize + 1){
+            tail[sizeIdx] -= allSize;
 
-            uint8_t* ptr = buffer + (tail[sizeIdx] - size + 1);
-            *reinterpret_cast<uint8_t**>(ptr) = nullptr;
+            uint8_t* ptr = buffer + (tail[sizeIdx] - size);
+            *(uint8_t**)ptr = nullptr;
 
             return tail[sizeIdx] + 1;
         }
@@ -65,9 +65,14 @@ private:
                 return INVALID;
             }
             else{
-                return combine(size >> 1);
+                return combine((size >> 1), (blocks << 1));
             }
         }
+    }
+
+    inline uint16_t extract(uint8_t size){
+        uint8_t sizeIdx = ctz(size) - 3;
+        uint8_t size1 = size >> 1;
     }
     
     #ifdef _MSC_VER
@@ -85,6 +90,8 @@ private:
     #endif
 
 public:
+    Paralloc(){}
+
     ~Paralloc(){
         std::free(buffer);
     }
@@ -107,7 +114,7 @@ public:
         int sizeIdx = ctz(size) - 3;
 
         if(head[sizeIdx] == INVALID){
-            int16_t combineIdx = combine(size >> 1);
+            int16_t combineIdx = combine(size >> 1, 2);
             if(combineIdx == INVALID) return static_cast<T*>(std::malloc(size));
             else return reinterpret_cast<T*>(buffer + combineIdx);
         }
