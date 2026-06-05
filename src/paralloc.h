@@ -17,7 +17,6 @@ private:
         hashed by count trail zero and decrease by 3
     */
     uint16_t head[4] = {0, 2048, 3072, 3584};
-    const uint16_t poolStart[4] = {0, 2048, 3072, 3584};
     uint16_t virgin[4] = {0, 2048, 3072, 3584};
     uint16_t tail[4] = {2047, 3071, 3583, 4095};
 
