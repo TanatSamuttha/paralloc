@@ -130,7 +130,7 @@ public:
         void* ptr = buffer + head[sizeIdx];
         if(head[sizeIdx] == virgin[sizeIdx]){
             virgin[sizeIdx] += size;
-            head[sizeIdx] = (virgin[sizeIdx] > tail[sizeIdx]) ? INVALID : head[sizeIdx] + size;
+            head[sizeIdx] = (virgin[sizeIdx] > tail[sizeIdx])? INVALID : head[sizeIdx] + size;
         }
         else{
             uint8_t* next = *(uint8_t**)ptr;
@@ -173,5 +173,6 @@ public:
         if(head[sizeIdx] == virgin[sizeIdx] - size) virgin[sizeIdx] -= size;
     }
 };
+
 
 #endif
