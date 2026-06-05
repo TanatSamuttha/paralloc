@@ -34,6 +34,21 @@ private:
         return INVALID;
     }
 
+    inline void connect(uint8_t size, uint16_t chunkSize){
+        int sizeIdx = ctz(size) - 3;
+        
+        uint16_t headPad = head[sizeIdx];
+        uint8_t* headPtr = buffer + headPad;
+        uint8_t* ptr = buffer + headPad;
+        
+        while(ptr + size < headPtr + chunkSize){
+            *(uint8_t**)ptr = ptr + size;
+            ptr += size;
+        }
+        
+        *(uint8_t**)ptr = nullptr;
+    }
+
     inline uint16_t combine(uint8_t size, uint8_t blocks){
         int sizeIdx = ctz(size) - 3;
         
@@ -130,7 +145,7 @@ public:
         void* ptr = buffer + head[sizeIdx];
         if(head[sizeIdx] == virgin[sizeIdx]){
             virgin[sizeIdx] += size;
-            head[sizeIdx] = (virgin[sizeIdx] > tail[sizeIdx]) ? INVALID : head[sizeIdx] + size;
+            head[sizeIdx] = (virgin[sizeIdx] > tail[sizeIdx])? INVALID : head[sizeIdx] + size;
         }
         else{
             uint8_t* next = *(uint8_t**)ptr;
@@ -173,5 +188,6 @@ public:
         if(head[sizeIdx] == virgin[sizeIdx] - size) virgin[sizeIdx] -= size;
     }
 };
+
 
 #endif
