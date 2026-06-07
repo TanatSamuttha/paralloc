@@ -105,16 +105,24 @@ private:
 
 public:
 
-    Palalloc(size_t pages){
+    inline Palalloc(size_t pages){
         poolSize = 4096 * pages;
     }
 
-    ~Palalloc(){
+    inline ~Palalloc(){
         std::free(pool);
     }
 
-    Palalloc(const Palalloc&) = delete;
-    Palalloc& operator=(const Palalloc&) = delete;
+    inline Palalloc(const Palalloc&) = delete;
+
+    inline Palalloc& operator=(const Palalloc&) = delete;
+
+    inline void init(){
+        if(!firstTime) return;
+        pool = static_cast<uint8_t*>(std::malloc(poolSize));
+        reset();
+        firstTime = false;
+    }
 
     inline void* getpool(){
         return static_cast<void*>(pool);
@@ -146,11 +154,7 @@ public:
 
     template<typename T>
     inline T* alloc(){
-        if(firstTime){
-            pool = static_cast<uint8_t*>(std::malloc(poolSize));
-            reset();
-            firstTime = false;
-        }
+        if(firstTime) init();
 
         size_t size = findSize(sizeof(T));
         if(size == INVALID) return nullptr;
@@ -209,7 +213,7 @@ public:
         head[sizeIdx] = static_cast<size_t>(ptrByte - pool);
     }
 
-    void reset(){
+    inline void reset(){
         head[0] = head[1] = head[2] = head[3] = INVALID;
 
         virgin[0] = 0; 
