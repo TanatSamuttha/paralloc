@@ -104,7 +104,6 @@ private:
     }
 
 public:
-
     inline Palalloc(size_t pages){
         poolSize = 4096 * pages;
     }
@@ -226,7 +225,13 @@ public:
         tail[2] = (poolSize >> 1) + (poolSize >> 2) + (poolSize >> 3) - 1; // 3583 at 1 page
         tail[3] = poolSize - 1; // 4095 at 1 page
     }
-};
 
+    inline void hard_reset(){
+        std::free(pool);
+        pool = nullptr;
+        firstTime = true;
+        reset();
+    }
+};
 
 #endif
