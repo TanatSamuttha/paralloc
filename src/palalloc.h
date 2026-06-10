@@ -138,7 +138,7 @@ public:
 
         if(maxSize > (poolSize >> 3)){
             size_t minPages = calculateMinPages(maxSize);
-            throw std::invalid_argument("maxSize exceeds the allowed limit is (pages * 4096) / 8 you need atleast " + std::to_string(minPages) + " pages");
+            throw std::invalid_argument("maxSize exceeds the allowed limit is (pages * 4096) / 8 you need atleast " + std::to_string(minPages) + ((minPages > 1)? " pages": "page"));
         }
 
         maxSize = std::max(maxSize, (size_t)64);
